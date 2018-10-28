@@ -48,20 +48,22 @@ public class GatewayApplication extends SpringBootServletInitializer {
 	}
 
 	@Bean
-	public TomcatEmbeddedServletContainerFactory tomcatFactory() {
-		return new TomcatEmbeddedServletContainerFactory() {
-
+	public TomcatEmbeddedServletContainerFactory tomcatFactory() 
+	{
+		TomcatEmbeddedServletContainerFactory factory = new TomcatEmbeddedServletContainerFactory() 
+		{
 			@Override
-			protected TomcatEmbeddedServletContainer getTomcatEmbeddedServletContainer(Tomcat tomcat) {
+			protected TomcatEmbeddedServletContainer getTomcatEmbeddedServletContainer(Tomcat tomcat) 
+			{
 				tomcat.enableNaming();
 				return super.getTomcatEmbeddedServletContainer(tomcat);
 			}
 
 			@Override
-			protected void postProcessContext(Context context) {
-			}
-			
+			protected void postProcessContext(Context context) {}
 		};
+		
+		return factory;
 	}
 }
 
