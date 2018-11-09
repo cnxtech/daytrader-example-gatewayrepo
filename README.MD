@@ -244,7 +244,7 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
 
 	    1.  $ cd daytrader-gatewayapp\daytrader-gateway\env\external\k8s
     
-		2.	$ kubectl apply -f gateway-deployment.yaml 
+		2.	$ kubectl apply -f daytrader-gateway-deployment.yaml 
 		
 		3.  $ kubectl get pods -o wide
 		
@@ -265,7 +265,7 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
         
         To create the service,
 
-            1.  $ apply -f gateway-service.yaml
+            1.  $ kubectl apply -f daytrader-gateway-service.yaml
         
             2.  $ kubectl get services
         
@@ -288,7 +288,7 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
         
                 # Note the NAME of the gateway pod; you'll need it to execute the next command
         
-            2.  $ kubectl exec <POD_NAME> -it - curl -k https://<CLUSTER-IP>/health
+            2.  $ kubectl exec <POD_NAME> -it -- curl -k https://<CLUSTER-IP>/health
             
                 {"status":"UP"}
   
