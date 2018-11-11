@@ -180,9 +180,9 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
 			a.	cd daytrader-accountsapp\daytrader-accounts
 			b.	env\external\bin\start_server.bat
 
-		2.	Start Portfolios
+		2.	Start gateway
 
-			a.	cd daytrader-gatewayapp\daytrader-portfolios
+			a.	cd daytrader-gatewayapp\daytrader-gateway
 			b.	env\external\bin\start_server.bat
 
 		3. Start Quotes
@@ -204,9 +204,9 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
 			a.	cd daytrader-accountsapp\daytrader-accounts
 			b.	env\external\bin\stop_server
 
-		2.	Stop Portfolios
+		2.	Stop gateway
 
-			a.	cd daytrader-portfoliosapp\daytrader-gateway
+			a.	cd daytrader-gatewayapp\daytrader-gateway
 			b.	env\external\bin\stop_server
 
 		3.	Stop Quotes
@@ -227,6 +227,7 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
 	    2.	$ mvn -Pcd clean install
 		
 	
+	
 #### Configure kubectl to access the right cluster
     
         1.  For Minikube,  
@@ -240,101 +241,122 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
             $ kubectl config use-context eks
             
             
-#### Create the deployment, replica set, and pod(s) to run the application
+            
+#### Create the deployment to run the application
 
 	    1.  $ cd daytrader-gatewayapp\daytrader-gateway\env\external\k8s
     
-		2.	$ kubectl apply -f daytrader-gateway-deployment.yaml 
+		2.	$ kubectl apply -f deployment.yaml 
 		
 		3.  $ kubectl get pods -o wide
 		
-		    ## Take note of the POD_NAME, and wait until the STATUS is Running.
+		    ## Take note of the POD_NAME, and wait until the STATUS is Running. 
               
-        4.  $ kubectl logs {POD_NAME}
+        4.  $ kubectl logs <POD_NAME>
         
-            ##  You should see : Tomcat started on port(s): 1443 (https)
+            ##  You should see : Tomcat started on port(s): 3443 (https). If not see Troubleshooting
+            
         
-        
-        
-#### Create the service so clients can communicate with pods via a constant IP
+#### Expose the application to clients through a Service resource
 
-        Before creating the service it is important to understand that rationale for creating them. Remember that pods are ephemeral. If 
-        a pod dies, then Kubernetes may create an identical pod but the pod will have a different IP. This means that clients should not 
-        communicate with pods via the pod IP. Instead you should frontend all pods by a service, and clients should communicate with pods 
-        through the service IP. 
+	Before creating the service it is important to understand the rationale for creating them. Remember that pods are ephemeral. If 
+	a pod stops, then Kubernetes will create an identical one, but it will have a different IP. For that reason, clients should not 
+	communicate with application's directly. Instead they should talk to applications via service. To create the service,
         
-        To create the service,
-
-            1.  $ kubectl apply -f daytrader-gateway-service.yaml
+        1.  $ kubectl apply -f service.yaml
+           
+        2.  $ kubectl get services
         
-            2.  $ kubectl get services
-        
-                NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
-                daytrader-gateway     ClusterIP   10.100.17.24     <none>        443/TCP         3d
+            NAME           	    TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)         AGE
+            daytrader-gateway	ClusterIP   10.100.17.24     <none>        443/TCP         3d
        
-                ## Notes
+            ## Notes
         
-                a.  The above command creates a service proxy. The service proxy listens on the CLUSTER IP and PORT. It is backed by endpoints 
-                    to one or more pods. When the service proxy receives an HTTPS request, it selects one of the endpoints (pods) and forwards 
-                    it to the pod. The application running in the pod handles the request and returns an HTTPS response
-            
-                b.  There is no EXTERNAL-IP to the service. This means that you can't access the service from outside the cluster. That said,
-                    you can assess it driectly from an application (or from a shell) that is running inside the pod, and indirectly by way of
-                    the API Server. Both options are discussed below.
+            	a.	The above command creates a service resource. This resource listens on the CLUSTER IP and PORT. It is backed by endpoints 
+               	    to one or more pods. You can see the dnpoints buy doing kubectl get endpoints. When the service receives an HTTPS request, 
+               	    it selects one of the endpoints (pods) and forwards the HTTPS request to the pod. The application running inside the pod 
+               	    handles the request and returns an HTTPS response.
+            	
+              	b.	See also https://kubernetes.io/docs/concepts/services-networking/service/      
+
+
+
+                            
+## Troubleshooting
+
+
+### Pods
         
-        Access the service directly,
-            
-            1.  $ kubectl get pods
+        1.	Retrieve the pods (application) logs
+    
+	           	a.	$ kubectl logs {POD_NAME} -f      ## The -f option tails the logs
+               
+
+        2.  Access the pod (application) through the port forwarder
         
-                # Note the NAME of the gateway pod; you'll need it to execute the next command
+	            a.	$ kubectl port-forward <POD_NAME> 8888:3443  ## This command forwards local port 8888 to port 3443 of your pod
+       
+        	    	Forwarding from 127.0.0.1:8888 -> 3443
+       
+	            b.	$ curl -k https://127.0.0.1:8888/health
+
+        	    	{"status":"UP"}      
+
+        	    	
+### Services
         
-            2.  $ kubectl exec <POD_NAME> -it -- curl -k https://<CLUSTER-IP>/health
-            
-                {"status":"UP"}
-  
-        Access the service indirectly (via  the API Server)
+        1.	Access the service (application) through the API Server
                         
-            1.  $ kubectl proxy
+	    		a.	$ kubectl proxy
         
-                Starting to serve on 127.0.0.1:8001
+	    			Starting to serve on 127.0.0.1:8001
                 
-                ## Locates and authenticates to the API Server.
+	    			## Locates and authenticates to the API Server.
 
-            2.  $ curl -k http://localhost:8001/api/v1/namespaces/default/services/https:daytrader-gateway:/proxy/health
-        
-                ## Accesses the gateway service through the API Server.       
-        
-        See also https://kubernetes.io/docs/concepts/services-networking/service/
-            
+    			b.	$ curl -k http://localhost:8001/api/v1/namespaces/default/services/https:daytrader-gateway:/proxy/health      
+		
+	    			{"status":"UP"}      		
+				
+	    		    ## The curl command sent the HTTP request (without any authentication headers) to the proxy that is running on your local machine.
+	    		    ## The proxy, then, sent an HTTPS request to the API server's identity by validating its certificate. Encryption, authentication,
+	    		    ## and server verification is handled by the proxy. This is the easiest way to connect to the API server. 
+			    
+	    		c. See also
+						  
+	    		   - https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-api/ 
 
-        
-#### Troubleshooting
-        
-    Review the standard output from your application using your pod names
+	    		   
+### Secrets
+			                 
+	    1.	Check and verify your certificate and key. This can be useful before applying them to your server. 
+
+		        a.	$ openssl x509 -in tls.crt -text  ## Check the certificate and its information (signing authority, expiration date, etc.)
+
+        		b.	$ openssl rsa -in tls.key -check  ## Check the SSL key and verify the consistency
     
-        $ kubectl logs {POD_NAME} -f
-        
-        ## The -f option tails the logs
-                
-    Open a bash terminal into your pods
+    	2. 	Verify the certificate and key match by comparing their checksums for equality
 
-        $ kubectl exec -ti {POD_NAME} bash
-        # echo $SERVER_PORT    ## you should see 1443
-        # exit
+	        	a.	$ openssl x509 -noout -modulus -in tls.crt | openssl md5
         
-    Use the kubernetes dashboard to manage and troubleshoot your cluster
-    
-        1.  Minikube
+        		b.	$ openssl rsa -noout -modulus -in tls.key | openssl md5      
+        
+        
+
+### Dashboard
+
+        1.  Use kubernetes dashboard to manage and troubleshoot your cluster
+        
+            For Minikube
         
                 a.  $ minikube dashboard
         
-        2.  EKS (https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html)
+            For EKS
         
                 a.  $ kubectl proxy
                 
                 b.  $ kubectl -n kube-system get secrets | grep admin
-                
-                    ## Copy the NAME of the admin-user-token
+               
+                      ## Copy the NAME of the admin-user-token
                 
                 c.  $ kubectl -n kube-system describe secrets <ADMIN_USER_TOKEN>
                 
@@ -346,28 +368,44 @@ The Gateway Application (highlighted in the green box) is a Spring Boot Applicat
                     
                 e.  You will see a login screen; choose Token and then enter the <AUTHENTICATION_TOKEN> from step c. 
    
-        See also https://github.com/AcalephStorage/kubernetes-dashboard/blob/master/docs/user-guide/troubleshooting.md
+            See also 
+    
+                a.  https://github.com/AcalephStorage/kubernetes-dashboard/blob/master/docs/user-guide/troubleshooting.md
+                b.  https://docs.aws.amazon.com/eks/latest/userguide/dashboard-tutorial.html
+
+
+
+## Swagger UI Documentation
+
+
+### Access Swagger UI via Spring Boot
+
+#### Local
+
+   		1. Make sure the application is running
+
+     			$ cd daytrader-gatewayapp
+       			$ daytrader-gateway\env\external\bin\start_server
+
+   		2. 	Point you browser to https://localhost:3443/swagger-ui.html
+
+	    3.	Stop the application after reviewing the APIs
+
+      			$ cd daytrader-gatewayapp	
+            	$ daytrader-gateway\env\external\bin\stop_server
+
+
+### Access Swagger UI via Kubernetes
+
+
+#### Pod
+        
+        1.  Make sure the application is accessible via the Pod (port forwarding)
                 
-                
+   		2. 	Point you browser to https://localhost:8888/swagger-ui.html
 
+#### Service
+        
+        1.  Make sure the application is accessible via the Service (kubectl proxy)
 
-
-## API Endpoints 
-
-### Swagger UI Documentation
-
-	To see the API documentation, 
-
-		1. Start the application
-
-			a.	cd daytrader-gatewayapp
-			b. 	daytrader-gateway\env\external\bin\start_server
-
-		2. 	Point you browser to https://localhost:2443/swagger-ui.html
-
-		3.	Stop the application after reviewing the API documentation
-
-			a.	cd daytrader-gatewayapp	
-			b.	daytrader-gateway\env\external\bin\stop_server
-
-	
+		2. 	Point you browser to http://localhost:8001/api/v1/namespaces/default/services/https:daytrader-gateway:/proxy/swagger-ui.html   
