@@ -22,19 +22,19 @@
 
 1.  Start the Accounts, Portfolios, and Quotes
 
-2.  Run the integration tests 
+2.  `$ cd daytrader-gateway`
 
-    a.  `$ cd daytrader-gateway`
-    
-    b.  `mvn -Pci clean install`
+3.  `$ mvn -Pci clean install`
 
     This command starts the application, runs the integration tests, then stops the application 
 
-3.  Stop the Accounts, Portfolios, and Quotes
+4.  Stop the Accounts, Portfolios, and Quotes
     
 ### Stop the Gateway
 
-1.  `$ ./env/ext/bin/stop_server.sh`
+1.  `$ cd daytrader-gateway`
+
+2.  `$ ./env/ext/bin/stop_server.sh`
 
     This command stops the Spring Boot executable WAR
     
