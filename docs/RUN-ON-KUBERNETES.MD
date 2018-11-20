@@ -37,9 +37,9 @@
 
     This command starts the application, runs the integration tests, and stops the aplication
 
-    **TODO** Add the `ci-k8s` Maven profile to run these integration tests. (See Run on Spring Boot)
-
 4.  Stop the Accounts, Portfolios, and Quotes
+
+**TODO** Add a `ci-k8s` Maven profile to run the integration tests. (See Run on Spring Boot)
     
 ### Stop the Gateway
 
@@ -47,7 +47,7 @@
 
 2.  `$ kubectl delete services daytrader-gateway`
 
-    **TODO** Add an `undeploy_server` shell script to run these commands. (See Run on Spring Boot)
+**TODO** Add an `undeploy_server` shell script to run these commands. (See Run on Spring Boot)
 
 ### Review the Swagger Documentation
 
