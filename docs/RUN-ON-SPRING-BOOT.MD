@@ -1,0 +1,47 @@
+
+## Run on Spring Boot
+
+
+### Build the Gateway
+
+1.  `$ cd daytrader-gatewayapp`
+
+2.  `$ mvn clean install`
+
+    This command builds the Spring Boot executable WAR
+
+### Start the Gateway
+
+1.  `$ cd daytrader-gateway`
+
+2.  `$ ./env/ext/bin/start_server.sh`
+
+    This command runs the Spring Boot executable WAR
+    
+### Test the Gateway
+
+1.  Start the Accounts, Portfolios, and Quotes
+
+2.  Run the integration tests 
+
+    a.  `$ cd daytrader-gateway`
+    
+    b.  `mvn -Pci clean install`
+
+    This command starts the application, runs the integration tests, then stops the application 
+
+3.  Stop the Accounts, Portfolios, and Quotes
+    
+### Stop the Gateway
+
+1.  `$ ./env/ext/bin/stop_server.sh`
+
+    This command stops the Spring Boot executable WAR
+    
+### Review the Swagger Documentation
+
+1.  Start the Gateway
+
+2.  Point you browser to https://localhost:2443/swagger-ui.html
+
+3.  Stop the Gateway after reviewing the APIs
