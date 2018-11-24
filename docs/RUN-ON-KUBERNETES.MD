@@ -53,13 +53,13 @@
 
 1.  Start the Gateway
 
-2.  `kubectl port-forward daytrader-gateway-xxxxxxxxx-xxxxx`
+2.  `kubectl port-forward daytrader-gateway-xxxxxxxxx-xxxxx 2888:2443`
 
-    You should see `Forwarding from 127.0.0.1:8888 -> 2443`
+    You should see `Forwarding from 127.0.0.1:2888 -> 2443`
     
-    This command forwards local port 8888 to port 2443 of your Pod
+    This command forwards local port 2888 to port 2443 of your Pod
 
-3.  Point you browser to `https://localhost:2443/swagger-ui.html`
+3.  Point you browser to `https://localhost:2888/swagger-ui.html`
 
 4.  Stop the Gateway after reviewing the APIs
 
