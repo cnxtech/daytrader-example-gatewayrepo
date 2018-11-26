@@ -6,7 +6,7 @@
 
 1.  `$ cd daytrader-gatewayapp`
 
-2.  `$ mvn clean install`
+2.  `$ mvn package`
 
     This command builds the Spring Boot executable WAR
 
@@ -14,7 +14,7 @@
 
 1.  `$ cd daytrader-gateway`
 
-2.  `$ ./env/ext/bin/start_server.sh`
+2.  `$ ./env/external/springboot/bin/start_server.sh`
 
     This command runs the Spring Boot executable WAR
     
@@ -24,7 +24,7 @@
 
 2.  `$ cd daytrader-gateway`
 
-3.  `$ mvn -Pci clean install`
+3.  `$ mvn verify`
 
     This command starts the application, runs the integration tests, then stops the application 
 
@@ -34,7 +34,7 @@
 
 1.  `$ cd daytrader-gateway`
 
-2.  `$ ./env/ext/bin/stop_server.sh`
+2.  `$ ./env/external/springboot/bin/stop_server.sh`
 
     This command stops the Spring Boot executable WAR
     
